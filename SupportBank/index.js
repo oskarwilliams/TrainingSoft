@@ -48,14 +48,14 @@ function extractNames(df) {
     return names
 }
 
-function errorLogging(debt, date, debtor, debtee, narrative) {
+function errorLogging(debt, date, debtor, debtee, narrative, DateFormat) {
     let ans = 0
     if (isNaN(debt)) {
         logger.error(debt + '        Should be a number, transaction was on ' + date);
         ans = 1;
     }
-    if (moment(date, dataDateFormat).format(desiredDateFormat) === 'Invalid date') {
-        logger.error(moment(date, dataDateFormat).format(desiredDateFormat) + '        Should be a date, transaction was on ' + date);
+    if (moment(date, DateFormat).format(desiredDateFormat) === 'Invalid date') {
+        logger.error(moment(date, DateFormat).format(desiredDateFormat) + '        Should be a date, transaction was on ' + date);
         ans = 1;
     }
     if (isBlankOrWhitespace(debtor)) {
@@ -85,7 +85,7 @@ function nameToAccount(name) {
 function AccountToPeople(Account,df){
     for (let i = 0; i < df.Data.length; i++) {
         
-        if (errorLogging(Number(df.Data[i][df.Format[4]]), df.Data[i][df.Format[0]], df.Data[i][df.Format[2]], df.Data[i][df.Format[1]], df.Data[i][df.Format[3]]) === 1) {
+        if (errorLogging(Number(df.Data[i][df.Format[4]]), df.Data[i][df.Format[0]], df.Data[i][df.Format[2]], df.Data[i][df.Format[1]], df.Data[i][df.Format[3]],df.DateFormat) === 1) {
             logger.error(i+1 + ' this line was in error so was ignored');
             console.log(i+1 + ' this line was in error so was ignored');
         } else {
@@ -94,13 +94,13 @@ function AccountToPeople(Account,df){
             let DebteeIndex = Account.findIndex((P) => P.Name === df.Data[i][df.Format[1]]);
             Account[DebteeIndex].Debtor.push(df.Data[i][df.Format[2]]);
             Account[DebteeIndex].Transaction.push(Amount);
-            Account[DebteeIndex].Date.push(moment(df.Data[i][df.Format[0]], dataDateFormat))
+            Account[DebteeIndex].Date.push(moment(df.Data[i][df.Format[0]], df.DateFormat))
             Account[DebteeIndex].Narrative.push(df.Data[i][df.Format[3]]);
 
             let DebtorIndex = Account.findIndex((P) => P.Name === df.Data[i][df.Format[2]]);
             Account[DebtorIndex].Debtor.push(df.Data[i][df.Format[1]]);
             Account[DebtorIndex].Transaction.push(-Amount);
-            Account[DebtorIndex].Date.push(moment(df.Data[i][df.Format[0]], dataDateFormat))
+            Account[DebtorIndex].Date.push(moment(df.Data[i][df.Format[0]], df.DateFormat))
             Account[DebtorIndex].Narrative.push(df.Data[i][df.Format[3]]);
             
         }
@@ -173,7 +173,6 @@ async function dataType() {
 async function doTheJob() {
     logger.trace('=======START=======');
     const df = await dataType();
-    dataDateFormat = df.DateFormat
     const People = createPeople(df);
     const usedFunction = getFunction();
     usedFunction(People)
