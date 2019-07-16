@@ -1,7 +1,7 @@
-exports.Calculate = function(i,rules) {
-    let s = []
-    if (i % 3 == 0 && rules.includes(3)){
-        s.push('Fizz')        
+exports.Calculate = function (i, rules) {
+    const s = []
+    if (i % 3 == 0 && rules.includes(3)) {
+        s.push('Fizz')
     }
     if (i % 13 == 0 && rules.includes(13)) {
         s.push('Fezz')
@@ -24,5 +24,5 @@ exports.Calculate = function(i,rules) {
     if (s.length == 0) {
         s = [i]
     }
-    return s    
+    return s
 }
