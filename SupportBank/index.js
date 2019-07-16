@@ -1,12 +1,11 @@
 const classes = require('./classes');
 const Person = classes.Person;
+const UnparsedTransactionList = classes.UnparsedTransactionList;
 const neatCsv = require('neat-csv');
 const fs = require('fs').promises;
 const moment = require('moment');
 const readlineSync = require('readline-sync');
 const log4js = require('log4js')
-
-const dataDateFormat = 'DD/MM/YYYY'
 const desiredDateFormat = 'DD/MM/YYYY'
 
 
@@ -26,18 +25,24 @@ async function readCSVFile(a) {
     logger.trace('Inputs: ')
     logger.trace(results);
     return results
-    //=> [{type: 'unicorn', part: 'horn'}, {type: 'rainbow', part: 'pink'}]
+};
+
+async function readJSONFile(a) {
+    let results = (await JSON.parse(await fs.readFile(a, 'utf-8')));
+    logger.trace('Inputs: ')
+    logger.trace(results);
+    return results
 };
 
 function isBlankOrWhitespace(a) {
     return (a === '' || a === ' ');
 }
 
-function extractNames(a) {
+function extractNames(df) {
     let names = [];
-    for (let i = 0; i < a.length; i++) {
-        if (!names.includes(a[i]['From'])) {
-            names.push(a[i]['From']);
+    for (let i = 0; i < (df.Data).length; i++) {
+        if (!names.includes(df.Data[i][df.Format[1]])) {
+            names.push(df.Data[i][df.Format[1]]);
         }
     }
     return names
@@ -68,50 +73,53 @@ function errorLogging(debt, date, debtor, debtee, narrative) {
     return ans
 }
 
-function nameToAccount(name, data) {
+function nameToAccount(name) {
     let totaldebt = 0;
     let debtor = [];
     let transaction = [];
     let date = [];
     let narrative = [];
-
-    for (let i = 0; i < data.length; i++) {
-        if (data[i].To === name || data[i].From === name) {
-            let debt = 0;
-            if (errorLogging(Number(data[i].Amount), data[i].Date, data[i].To, data[i].From, data[i].Narrative) === 1) {
-                logger.error(i+1 + ' this line was in error so was ignored');
-                console.log(i+1 + ' this line was in error so was ignored');
-            } else {
-                if (data[i].From === name) {
-                    debt = Number(data[i].Amount);
-                    debtor.push(data[i].To);
-                };
-                if (data[i].To === name) {
-                    debt = -Number(data[i].Amount);
-                    debtor.push(data[i].From);
-                };
-                transaction.push(debt);
-                date.push(moment(data[i].Date, dataDateFormat));
-                narrative.push(data[i].Narrative)
-            }
-            totaldebt += debt;
-        }
-    };
-    return new Person(name, totaldebt.toFixed(2), debtor, transaction, date, narrative)
+    return new Person(name, totaldebt, debtor, transaction, date, narrative)
 }
 
-function createPeople(data) {
-    const names = extractNames(data)
-    let People = []
+function AccountToPeople(Account,df){
+    for (let i = 0; i < df.Data.length; i++) {
+        
+        if (errorLogging(Number(df.Data[i][df.Format[4]]), df.Data[i][df.Format[0]], df.Data[i][df.Format[2]], df.Data[i][df.Format[1]], df.Data[i][df.Format[3]]) === 1) {
+            logger.error(i+1 + ' this line was in error so was ignored');
+            console.log(i+1 + ' this line was in error so was ignored');
+        } else {
+            let Amount = Number(df.Data[i][df.Format[4]]);
+            if (isNaN(Amount)){ console.log(df.Data[i][df.Format[4]])}
+            let DebteeIndex = Account.findIndex((P) => P.Name === df.Data[i][df.Format[1]]);
+            Account[DebteeIndex].Debtor.push(df.Data[i][df.Format[2]]);
+            Account[DebteeIndex].Transaction.push(Amount);
+            Account[DebteeIndex].Date.push(moment(df.Data[i][df.Format[0]], dataDateFormat))
+            Account[DebteeIndex].Narrative.push(df.Data[i][df.Format[3]]);
+
+            let DebtorIndex = Account.findIndex((P) => P.Name === df.Data[i][df.Format[2]]);
+            Account[DebtorIndex].Debtor.push(df.Data[i][df.Format[1]]);
+            Account[DebtorIndex].Transaction.push(-Amount);
+            Account[DebtorIndex].Date.push(moment(df.Data[i][df.Format[0]], dataDateFormat))
+            Account[DebtorIndex].Narrative.push(df.Data[i][df.Format[3]]);
+            
+        }
+    }
+    return Account
+}
+
+function createPeople(df) {
+    const names = extractNames(df);
+    let Account = [];
     names.forEach(name => {
-        return People.push(nameToAccount(name, data))
+        return Account.push(nameToAccount(name));
     });
-    return People
+    return People = AccountToPeople(Account,df);
 }
 
 function listAll(People) {
     People.forEach(element => {
-        console.log(`Name: ${element.Name} -- Debt: ${element.Debt}`);
+        console.log(`Name: ${element.Name} -- Debt: ${(element.Debt).toFixed(2)}`);
     })
 }
 
@@ -124,7 +132,7 @@ function listAccount(People) {
         return
     };
     for (let i = 0; i < Account.Debtor.length; i++) {
-        console.log(`Date: ${Account.Date[i].format(desiredDateFormat)} -- Name: ${Account.Debtor[i]} -- Debt: ${Account.Transaction[i]} -- Narrative: ${Account.Narrative[i]}`)
+        console.log(`Date: ${Account.Date[i].format(desiredDateFormat)} -- Name: ${Account.Debtor[i]} -- Debt: ${(Account.Transaction[i]).toFixed(2)} -- Narrative: ${Account.Narrative[i]}`)
     }
 }
 
@@ -143,11 +151,30 @@ function getFunction() {
     return usedFunction;
 }
 
+async function dataType() {
+    const csvOrJson = readlineSync.question('CSV or JSON file? (C/J)   ');
+    let df = new UnparsedTransactionList([],[]);
+    if (csvOrJson === 'C'){
+        df.Data = await readCSVFile('Data/Transactions2014.csv');
+        df.Format = await ['Date','From','To','Narrative','Amount']
+        df.DateFormat = 'DD/MM/YYYY'
+        return df
+    } else if (csvOrJson === 'J'){
+        df.Data = await readJSONFile('Data/Transactions2013.json');
+        df.Format = await ['Date','FromAccount','ToAccount','Narrative','Amount']
+        df.DateFormat = ''
+        return df
+    } else {
+        console.log('Not a valid option, please try again.  ')
+        return dataType()
+    }
+}
 
 async function doTheJob() {
     logger.trace('=======START=======');
-    const data = await readCSVFile('Data/DodgyTransactions2015.csv');
-    const People = createPeople(data);
+    const df = await dataType();
+    dataDateFormat = df.DateFormat
+    const People = createPeople(df);
     const usedFunction = getFunction();
     usedFunction(People)
     logger.trace('=======END=======');
