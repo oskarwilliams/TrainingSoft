@@ -25,30 +25,20 @@ class Person {
     }
 }
 
-function createPeople(data) {
-    const names = extractNames(data)
-    let People = []
-    names.forEach(element => {
-        let debt = 0;
-        for (let i = 0; i < data.length; i++){
-            if (data[i]['From'] === element) {
-                debt -= data[i]['Amount']
-            };
-            if (data)
-        };
-        return People.push(new Person(element, debt))
-    });
-    return People
-}
+// function createPeople(data) {
+//     const names = extractNames(data)
+//     names.forEach(element => {
+//         data[element]
+//     });
+// }
 
 
 
 async function doTheJob() {
     const data = await readCSVFile('Transactions2014.csv')
     
-    const People = createPeople(data)
-    console.log(People)
-
+    // const People = createPeople(data)
+    console.log(data[1])
 }
 
 
