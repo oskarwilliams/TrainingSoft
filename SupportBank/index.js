@@ -48,26 +48,29 @@ function extractNames(df) {
     return names
 }
 
-function errorLogging(debt, date, debtor, debtee, narrative, DateFormat) {
+function errorLogging(df, Format, DateFormat) {
+    //df.Data[i][df.Format[4]]), df.Data[i][df.Format[0]], df.Data[i][df.Format[2]], df.Data[i][df.Format[1]], df.Data[i][df.Format[3]]
+    //debt, date, debtor, debtee, narrative
+    console.log(df)
     let ans = 0
-    if (isNaN(debt)) {
-        logger.error(debt + '        Should be a number, transaction was on ' + date);
+    if (isNaN(df[Format[4]])) {
+        logger.error(df[Format[4]] + '        Should be a number, transaction was on ' + df[Format[0]]);
         ans = 1;
     }
-    if (moment(date, DateFormat).format(desiredDateFormat) === 'Invalid date') {
-        logger.error(moment(date, DateFormat).format(desiredDateFormat) + '        Should be a date, transaction was on ' + date);
+    if (moment(df[Format[0]], DateFormat).format(desiredDateFormat) === 'Invalid date') {
+        logger.error(moment(df[Format[0]], DateFormat).format(desiredDateFormat) + '        Should be a date, transaction was on ' + df[Format[0]]);
         ans = 1;
     }
-    if (isBlankOrWhitespace(debtor)) {
-        logger.error('Is only whitespace or empty for debtor, transaction was on ' + date);
+    if (isBlankOrWhitespace(df[Format[2]])) {
+        logger.error('Is only whitespace or empty for debtor, transaction was on ' + df[Format[0]]);
         ans = 1;
     }
-    if (isBlankOrWhitespace(debtee)) {
-        logger.error('Is only whitespace or empty for debtee, transaction was on ' + date);
+    if (isBlankOrWhitespace(df[Format[1]])) {
+        logger.error('Is only whitespace or empty for debtee, transaction was on ' + df[Format[0]]);
         ans = 1;
     }
-    if (isBlankOrWhitespace(narrative)) {
-        logger.error('Is only whitespace or empty for narrative, transaction was on ' + date);
+    if (isBlankOrWhitespace(df[Format[3]])) {
+        logger.error('Is only whitespace or empty for narrative, transaction was on ' + df[Format[0]]);
         ans = 1;
     }
     return ans
@@ -82,15 +85,15 @@ function nameToAccount(name) {
     return new Person(name, totaldebt, debtor, transaction, date, narrative)
 }
 
-function AccountToPeople(Account,df){
+function AccountToPeople(Account, df) {
     for (let i = 0; i < df.Data.length; i++) {
-        
-        if (errorLogging(Number(df.Data[i][df.Format[4]]), df.Data[i][df.Format[0]], df.Data[i][df.Format[2]], df.Data[i][df.Format[1]], df.Data[i][df.Format[3]],df.DateFormat) === 1) {
-            logger.error(i+1 + ' this line was in error so was ignored');
-            console.log(i+1 + ' this line was in error so was ignored');
+
+        if (errorLogging(df.Data[i], df.Format, df.DateFormat) === 1) {
+            logger.error(i + 1 + ' this line was in error so was ignored');
+            console.log(i + 1 + ' this line was in error so was ignored');
         } else {
             let Amount = Number(df.Data[i][df.Format[4]]);
-            if (isNaN(Amount)){ console.log(df.Data[i][df.Format[4]])}
+            if (isNaN(Amount)) { console.log(df.Data[i][df.Format[4]]) }
             let DebteeIndex = Account.findIndex((P) => P.Name === df.Data[i][df.Format[1]]);
             Account[DebteeIndex].Debtor.push(df.Data[i][df.Format[2]]);
             Account[DebteeIndex].Transaction.push(Amount);
@@ -102,7 +105,7 @@ function AccountToPeople(Account,df){
             Account[DebtorIndex].Transaction.push(-Amount);
             Account[DebtorIndex].Date.push(moment(df.Data[i][df.Format[0]], df.DateFormat))
             Account[DebtorIndex].Narrative.push(df.Data[i][df.Format[3]]);
-            
+
         }
     }
     return Account
@@ -114,7 +117,7 @@ function createPeople(df) {
     names.forEach(name => {
         return Account.push(nameToAccount(name));
     });
-    return People = AccountToPeople(Account,df);
+    return People = AccountToPeople(Account, df);
 }
 
 function listAll(People) {
@@ -152,18 +155,21 @@ function getFunction() {
 }
 
 async function dataType() {
-    const csvOrJson = readlineSync.question('CSV or JSON file? (C/J)   ');
-    let df = new UnparsedTransactionList([],[]);
-    if (csvOrJson === 'C'){
-        df.Data = await readCSVFile('Data/Transactions2014.csv');
-        df.Format = await ['Date','From','To','Narrative','Amount']
+    const csvOrJson = readlineSync.question('What is the filename?  ');
+    csvOrJson.replace(/\s/g, "");
+    let df = new UnparsedTransactionList([], []);
+    if (csvOrJson.includes('.csv')) {
+        df.Data = await readCSVFile('Data/' + csvOrJson);
+        df.Format = await ['Date', 'From', 'To', 'Narrative', 'Amount']
         df.DateFormat = 'DD/MM/YYYY'
         return df
-    } else if (csvOrJson === 'J'){
-        df.Data = await readJSONFile('Data/Transactions2013.json');
-        df.Format = await ['Date','FromAccount','ToAccount','Narrative','Amount']
+    } else if (csvOrJson.includes('.json')) {
+        df.Data = await readJSONFile('Data/' + csvOrJson);
+        df.Format = await ['Date', 'FromAccount', 'ToAccount', 'Narrative', 'Amount']
         df.DateFormat = ''
         return df
+    } else if (csvOrJson.includes('.xml')) {
+
     } else {
         console.log('Not a valid option, please try again.  ')
         return dataType()
