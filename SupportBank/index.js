@@ -1,7 +1,8 @@
 const classes = require('./classes');
 const Person = classes.Person;
+const File = classes.File;
 const log4js = require('log4js');
-const fs = require('fs').promises;
+const fs = require('fs');
 const moment = require('moment');
 const readlineSync = require('readline-sync');
 const importer = require('./importer');
@@ -23,26 +24,26 @@ function isBlankOrWhitespace(a) {
     return (a === '' || a === ' ');
 }
 
-function errorLogging(df, Format, DateFormat) {
+function errorLogging(SingleTransaction) {
     let ans = 0;
-    if (isNaN(df[Format[4]])) {
-        logger.error(`${df[Format[4]]}        Should be a number, transaction was on ${df[Format[0]]}`);
+    if (isNaN(SingleTransaction.Amount)) {
+        logger.error(`${SingleTransaction.Amount}        Should be a number, transaction was on ${SingleTransaction.Date}`);
         ans = 1;
     }
-    if (moment(df[Format[0]], DateFormat).format(desiredDateFormat) === 'Invalid date') {
-        logger.error(`${moment(df[Format[0]], DateFormat).format(desiredDateFormat)}        Should be a date, transaction was on ${df[Format[0]]}`);
+    if ((SingleTransaction.Date).format(desiredDateFormat) === 'Invalid date') {
+        logger.error(`${(SingleTransaction.Date).format(desiredDateFormat)}        Should be a date, transaction was on ${SingleTransaction.Date}`);
         ans = 1;
     }
-    if (isBlankOrWhitespace(df[Format[2]])) {
-        logger.error(`Is only whitespace or empty for debtor, transaction was on ${df[Format[0]]}`);
+    if (isBlankOrWhitespace(SingleTransaction.ToAccount)) {
+        logger.error(`Is only whitespace or empty for debtor, transaction was on ${SingleTransaction.Date}`);
         ans = 1;
     }
-    if (isBlankOrWhitespace(df[Format[1]])) {
-        logger.error(`Is only whitespace or empty for debtee, transaction was on ${df[Format[0]]}`);
+    if (isBlankOrWhitespace(SingleTransaction.FromAccount)) {
+        logger.error(`Is only whitespace or empty for debtee, transaction was on ${SingleTransaction.Date}`);
         ans = 1;
     }
-    if (isBlankOrWhitespace(df[Format[3]])) {
-        logger.error(`Is only whitespace or empty for narrative, transaction was on ${df[Format[0]]}`);
+    if (isBlankOrWhitespace(SingleTransaction.Narrative)) {
+        logger.error(`Is only whitespace or empty for narrative, transaction was on ${SingleTransaction.Date}`);
         ans = 1;
     }
     return ans;
@@ -57,46 +58,47 @@ function getEmptyAccountList(name) {
     return new Person(name, totaldebt, debtor, transaction, date, narrative);
 }
 
-function getNames(df) {
+function getNames(TransactionList) {
     const names = [];
-    for (let i = 0; i < (df.Data).length; i++) {
-        if (!names.includes(df.Data[i][df.Format[1]])) {
-            names.push(df.Data[i][df.Format[1]]);
+    for (let i = 0; i < TransactionList.length; i++) {
+        if (!names.includes(TransactionList[i].FromAccount)) {
+            names.push(TransactionList[i].FromAccount);
         }
     }
     return names;
 }
 
-function populateAccountList(EmptyAccountList, DataAndFormat) {
-    DataAndFormat.Data.forEach(SingleTransaction => {
-        if (errorLogging(SingleTransaction, DataAndFormat.Format, DataAndFormat.DateFormat) === 1) {
+function populateAccountList(EmptyAccountList, TransactionList) {
+    const AccountList = EmptyAccountList;
+    TransactionList.forEach(SingleTransaction => {
+        if (errorLogging(SingleTransaction) === 1) {
             logger.error(`${i + 1} this line was in error so was ignored`);
             console.log(`${i + 1} this line was in error so was ignored`);
         } else {
-            const Amount = Number(SingleTransaction[DataAndFormat.Format[4]]);
-            if (isNaN(Amount)) { console.log(SingleTransaction[DataAndFormat.Format[4]]); }
-            const DebteeIndex = EmptyAccountList.findIndex(P => P.Name === SingleTransaction[DataAndFormat.Format[1]]);
-            EmptyAccountList[DebteeIndex].Debtor.push(SingleTransaction[DataAndFormat.Format[2]]);
-            EmptyAccountList[DebteeIndex].Transaction.push(Amount);
-            EmptyAccountList[DebteeIndex].Date.push(moment(SingleTransaction[DataAndFormat.Format[0]], DataAndFormat.DateFormat));
-            EmptyAccountList[DebteeIndex].Narrative.push(SingleTransaction[DataAndFormat.Format[3]]);
+            const Amount = Number(SingleTransaction.Amount);
+            if (isNaN(Amount)) { console.log(SingleTransaction.Amount); }
+            const DebteeIndex = AccountList.findIndex(P => P.Name === SingleTransaction.FromAccount);
+            AccountList[DebteeIndex].Debtor.push(SingleTransaction.ToAccount);
+            AccountList[DebteeIndex].Transaction.push(Amount);
+            AccountList[DebteeIndex].Date.push(SingleTransaction.Date);
+            AccountList[DebteeIndex].Narrative.push(SingleTransaction.Narrative);
 
-            const DebtorIndex = EmptyAccountList.findIndex(P => P.Name === SingleTransaction[DataAndFormat.Format[2]]);
-            EmptyAccountList[DebtorIndex].Debtor.push(SingleTransaction[DataAndFormat.Format[1]]);
-            EmptyAccountList[DebtorIndex].Transaction.push(-Amount);
-            EmptyAccountList[DebtorIndex].Date.push(moment(SingleTransaction[DataAndFormat.Format[0]], DataAndFormat.DateFormat));
-            EmptyAccountList[DebtorIndex].Narrative.push(SingleTransaction[DataAndFormat.Format[3]]);
+            const DebtorIndex = AccountList.findIndex(P => P.Name === SingleTransaction.ToAccount);
+            AccountList[DebtorIndex].Debtor.push(SingleTransaction.FromAccount);
+            AccountList[DebtorIndex].Transaction.push(-Amount);
+            AccountList[DebtorIndex].Date.push(SingleTransaction.Date);
+            AccountList[DebtorIndex].Narrative.push(SingleTransaction.Narrative);
         }
     });
-    return EmptyAccountList;
+    return AccountList;
 }
 
-function getAccountList(DataAndFormat) {
-    const names = getNames(DataAndFormat);
+function getAccountList(TransactionList) {
+    const names = getNames(TransactionList);
     const EmptyAccountList = [];
     names.forEach(name => EmptyAccountList.push(getEmptyAccountList(name))
     );
-    let AccountList = populateAccountList(EmptyAccountList, DataAndFormat);
+    let AccountList = populateAccountList(EmptyAccountList, TransactionList);
     return AccountList
 }
 
@@ -119,32 +121,57 @@ function listAccount(AccountList) {
     }
 }
 
-
-function viewAccountList(AccountList) {
-    const whichFunction = readlineSync.question('Would you like to list all total debts or the details for a single account?[A/S]   ');
-    if (whichFunction === 'A') {
-        listAll(AccountList);
-        return;
-    } else if (whichFunction === 'S') {
-        listAccount(AccountList);
-        return;
-    } else {
-        console.log('That is not a valid choice, please try again');
-        viewAccountList();
-        return;
+function getExportFileSetup(AccountList) {
+    const ExportFileSetup = new File;
+    ExportFileSetup.Name = readlineSync.question('What is the desired filename?    ');
+    ExportFileSetup.Name.replace(/\s/g, "");
+    ExportFileSetup.Data = AccountList
+    ExportFileSetup.DateFormat = readlineSync.question('What is the desired Date format? (Will default to "DD/MM/YYYY" if empty)    ');
+    if (ExportFileSetup.DateFormat === ''){
+        ExportFileSetup.DateFormat = 'DD/MMM/YYYY'
     }
+    return ExportFileSetup
+}
+
+function exportAccountList(AccountList) {
+    ExportFileSetup = getExportFileSetup(AccountList);
+    const jsonExport = JSON.stringify(ExportFileSetup.Data)
+    fs.writeFileSync('Outputs/' + ExportFileSetup.Name + '.json', jsonExport)
 }
 
 
 async function doTheJob() {
     logger.trace('=======START=======');
-    console.log('======WELCOME=======')
-    const DataAndFormat = await importer.getUnparsedTransactionList();
-    const AccountList = await getAccountList(DataAndFormat);
-    viewAccountList(AccountList);
-    exportAccountList(AccountList);
+    console.log('======WELCOME=======\nWhat function would you like to perform?\nIMPORT a new file\nCLEAR all stored data\nLIST ALL account balances\nLIST the transactions for an account\nEXPORT the transcations to a file')
+    const desiredFunction = (readlineSync.prompt()).toLowerCase()
+    switch (desiredFunction){
+        case 'import':
+            let TransactionList = await importer.getUnparsedTransactionList();
+            FullTransactionList = FullTransactionList.concat(TransactionList);
+            AccountList = await getAccountList(FullTransactionList);
+            break
+        case 'clear':
+            FullTransactionList.splice(0, FullTransactionList.length);
+            AccountList.splice(0, AccountList.length)
+            break
+        case 'list all':
+            listAll(AccountList);
+            break
+        case 'list':
+            listAccount(AccountList);
+            break
+        case 'export':
+            exportAccountList(AccountList);
+            break
+        default:
+            console.log('That is not a valid instruction, please try again.   ')
+            break
+    }
     logger.trace('=======END=======');
+    console.log('\n\n\n\n')
     doTheJob()
 }
 
+let AccountList = []
+let FullTransactionList = []
 doTheJob()

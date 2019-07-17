@@ -12,15 +12,7 @@ class Person {
     }
 }
 
-class UnparsedTransactionList{
-    constructor() {
-    this.Format = [];
-    this.Data = [];
-    this.DateFormat = '';
-    }
-}
-
-class JSONmimic{
+class Transaction{
     constructor(Date, FromAccount, ToAccount, Narrative, Amount) {
     this.Date = Date;
     this.FromAccount = FromAccount;
@@ -30,6 +22,14 @@ class JSONmimic{
     }
 }
 
+class File{
+    constructor(Name,Data,DateFormat) {
+    this.Name = Name;
+    this.Data = Data;
+    this.DateFormat = DateFormat;
+    }
+}
+
 exports.Person = Person;
-exports.UnparsedTransactionList = UnparsedTransactionList;
-exports.JSONmimic = JSONmimic;
+exports.Transaction = Transaction;
+exports.File = File;
