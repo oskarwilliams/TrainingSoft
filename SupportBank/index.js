@@ -1,11 +1,16 @@
 const classes = require('./classes');
 const Person = classes.Person;
+const JSONmimic = classes.JSONmimic;
 const UnparsedTransactionList = classes.UnparsedTransactionList;
 const neatCsv = require('neat-csv');
 const fs = require('fs').promises;
 const moment = require('moment');
 const readlineSync = require('readline-sync');
 const log4js = require('log4js')
+const parseXML = require('xml-js');
+
+
+
 const desiredDateFormat = 'DD/MM/YYYY'
 
 
@@ -20,6 +25,23 @@ log4js.configure({
 
 const logger = log4js.getLogger('file')
 
+async function JSONfromXML(string) {
+    let jsonString = await parseXML.xml2json(string, { compact: true, spaces: 4 });
+    let unhelpfulResults = (await JSON.parse(jsonString)).TransactionList.SupportTransaction;
+    let TransactionList = []
+    unhelpfulResults.forEach(function (badTransaction) {
+        let Transaction = new JSONmimic
+        Transaction.Date = moment('31/12/1899', 'DD/MM/YYYY').add(badTransaction._attributes.Date,'days');
+        Transaction.FromAccount = badTransaction.Parties.From._text;
+        Transaction.ToAccount = badTransaction.Parties.To._text;
+        Transaction.Narrative = badTransaction.Description._text;
+        Transaction.Amount = badTransaction.Value._text;
+
+        TransactionList.push(Transaction);
+    });
+    return TransactionList
+}
+
 async function readCSVFile(a) {
     let results = (await neatCsv(await fs.readFile(a, 'utf-8')));
     logger.trace('Inputs: ')
@@ -29,6 +51,15 @@ async function readCSVFile(a) {
 
 async function readJSONFile(a) {
     let results = (await JSON.parse(await fs.readFile(a, 'utf-8')));
+    console.log(results)
+    logger.trace('Inputs: ')
+    logger.trace(results);
+    return results
+};
+
+async function readXMLFile(a) {
+    let xmlString = await fs.readFile(a, 'utf-8');
+    let results = JSONfromXML(xmlString);
     logger.trace('Inputs: ')
     logger.trace(results);
     return results
@@ -49,9 +80,6 @@ function extractNames(df) {
 }
 
 function errorLogging(df, Format, DateFormat) {
-    //df.Data[i][df.Format[4]]), df.Data[i][df.Format[0]], df.Data[i][df.Format[2]], df.Data[i][df.Format[1]], df.Data[i][df.Format[3]]
-    //debt, date, debtor, debtee, narrative
-    console.log(df)
     let ans = 0
     if (isNaN(df[Format[4]])) {
         logger.error(df[Format[4]] + '        Should be a number, transaction was on ' + df[Format[0]]);
@@ -160,16 +188,19 @@ async function dataType() {
     let df = new UnparsedTransactionList([], []);
     if (csvOrJson.includes('.csv')) {
         df.Data = await readCSVFile('Data/' + csvOrJson);
-        df.Format = await ['Date', 'From', 'To', 'Narrative', 'Amount']
+        df.Format = ['Date', 'From', 'To', 'Narrative', 'Amount']
         df.DateFormat = 'DD/MM/YYYY'
         return df
     } else if (csvOrJson.includes('.json')) {
         df.Data = await readJSONFile('Data/' + csvOrJson);
-        df.Format = await ['Date', 'FromAccount', 'ToAccount', 'Narrative', 'Amount']
+        df.Format = ['Date', 'FromAccount', 'ToAccount', 'Narrative', 'Amount']
         df.DateFormat = ''
         return df
     } else if (csvOrJson.includes('.xml')) {
-
+        df.Data = await readXMLFile('Data/' + csvOrJson);
+        df.Format = ['Date', 'FromAccount', 'ToAccount', 'Narrative', 'Amount']
+        df.DateFormat = ''
+        return df
     } else {
         console.log('Not a valid option, please try again.  ')
         return dataType()

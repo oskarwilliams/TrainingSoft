@@ -1,46 +1,11 @@
-const neatCsv = require('neat-csv');
-const fs = require('fs').promises;
-const moment = require('moment')
-
-async function readCSVFile(a) {
-    let results = (await neatCsv(await fs.readFile(a, 'utf-8')));
-    return results
-    //=> [{type: 'unicorn', part: 'horn'}, {type: 'rainbow', part: 'pink'}]
-};
-
-function extractNames(a) {
-    let names = [];
-    for (let i = 0; i < a.length; i++) {
-        if (!names.includes(a[i]['From'])) {
-            names.push(a[i]['From']);
-        }
-    }
-    return names
-}
-
-class Person {
-    constructor(Name, Debt) {
-        this.Name = Name;
-        this.Debt = Debt;
-    }
-}
-
-// function createPeople(data) {
-//     const names = extractNames(data)
-//     names.forEach(element => {
-//         data[element]
-//     });
-// }
-
-
-
-async function doTheJob() {
-    const data = await readCSVFile('Transactions2014.csv')
-    
-    // const People = createPeople(data)
-    console.log(data[1])
-}
-
-
-
-doTheJob();
+var convert = require('xml-js');
+var xml =
+'<?xml version="1.0" encoding="utf-8"?>' +
+'<note importance="high" logged="true">' +
+'    <title>Happy</title>' +
+'    <todo>Work</todo>' +
+'    <todo>Play</todo>' +
+'</note>';
+var result1 = convert.xml2json(xml, {compact: true, spaces: 4});
+var result2 = convert.xml2json(xml, {compact: false, spaces: 4});
+console.log(result1, '\n', result2);
