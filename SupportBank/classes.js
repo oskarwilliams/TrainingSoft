@@ -8,16 +8,12 @@ class Person {
     }
 
     get Debt() {
-        return this.calcDebt();
-    }
-
-    calcDebt() {
         return this.Transaction.reduce((accumulator, currentValue) => accumulator + currentValue);
     }
 }
 
 class UnparsedTransactionList{
-    constructor(Format, Data, DateFormat) {
+    constructor() {
     this.Format = [];
     this.Data = [];
     this.DateFormat = '';
@@ -27,10 +23,10 @@ class UnparsedTransactionList{
 class JSONmimic{
     constructor(Date, FromAccount, ToAccount, Narrative, Amount) {
     this.Date = Date;
-    this.FromAccount = '';
-    this.ToAccount = '';
-    this.Narrative = '';
-    this.Amount = '';
+    this.FromAccount = FromAccount;
+    this.ToAccount = ToAccount;
+    this.Narrative = Narrative;
+    this.Amount = Amount;
     }
 }
 
