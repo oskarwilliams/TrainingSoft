@@ -3,7 +3,6 @@ const Person = classes.Person;
 const File = classes.File;
 const log4js = require('log4js');
 const fs = require('fs');
-const moment = require('moment');
 const readlineSync = require('readline-sync');
 const importer = require('./importer');
 
@@ -72,6 +71,7 @@ function populateAccountList(EmptyAccountList, TransactionList) {
     const AccountList = EmptyAccountList;
     TransactionList.forEach(SingleTransaction => {
         if (errorLogging(SingleTransaction) === 1) {
+            let i = TransactionList.findIndex(a => a === SingleTransaction);
             logger.error(`${i + 1} this line was in error so was ignored`);
             console.log(`${i + 1} this line was in error so was ignored`);
         } else {
@@ -99,7 +99,7 @@ function getAccountList(TransactionList) {
     names.forEach(name => EmptyAccountList.push(getEmptyAccountList(name))
     );
     let AccountList = populateAccountList(EmptyAccountList, TransactionList);
-    return AccountList
+    return AccountList;
 }
 
 function listAll(AccountList) {
@@ -115,7 +115,7 @@ function listAccount(AccountList) {
         console.log('That is not a correct name, please try again.   ');
         listAccount(AccountList);
         return;
-    };
+    }
     for (let i = 0; i < Account.Debtor.length; i++) {
         console.log(`Date: ${Account.Date[i].format(desiredDateFormat)} -- Name: ${Account.Debtor[i]} -- Debt: ${(Account.Transaction[i]).toFixed(2)} -- Description: ${Account.Narrative[i]}`);
     }
@@ -125,53 +125,54 @@ function getExportFileSetup(AccountList) {
     const ExportFileSetup = new File;
     ExportFileSetup.Name = readlineSync.question('What is the desired filename?    ');
     ExportFileSetup.Name.replace(/\s/g, "");
-    ExportFileSetup.Data = AccountList
+    ExportFileSetup.Data = AccountList; 
     ExportFileSetup.DateFormat = readlineSync.question('What is the desired Date format? (Will default to "DD/MM/YYYY" if empty)    ');
     if (ExportFileSetup.DateFormat === ''){
-        ExportFileSetup.DateFormat = 'DD/MMM/YYYY'
+        ExportFileSetup.DateFormat = 'DD/MMM/YYYY';
     }
-    return ExportFileSetup
+    return ExportFileSetup;
 }
 
 function exportAccountList(AccountList) {
-    ExportFileSetup = getExportFileSetup(AccountList);
-    const jsonExport = JSON.stringify(ExportFileSetup.Data)
-    fs.writeFileSync('Outputs/' + ExportFileSetup.Name + '.json', jsonExport)
+    const ExportFileSetup = getExportFileSetup(AccountList);
+    const jsonExport = JSON.stringify(ExportFileSetup.Data);
+    fs.writeFileSync('Outputs/' + ExportFileSetup.Name + '.json', jsonExport);
 }
 
 
 async function doTheJob() {
     logger.trace('=======START=======');
-    console.log('======WELCOME=======\nWhat function would you like to perform?\nIMPORT a new file\nCLEAR all stored data\nLIST ALL account balances\nLIST the transactions for an account\nEXPORT the transcations to a file')
-    const desiredFunction = (readlineSync.prompt()).toLowerCase()
+    console.log('======WELCOME=======\nWhat function would you like to perform?\nIMPORT a new file\nCLEAR all stored data\nLIST ALL account balances\nLIST the transactions for an account\nEXPORT the transcations to a file');
+    const desiredFunction = (readlineSync.prompt()).toLowerCase();
+    let TransactionList;
     switch (desiredFunction){
-        case 'import':
-            let TransactionList = await importer.getUnparsedTransactionList();
-            FullTransactionList = FullTransactionList.concat(TransactionList);
-            AccountList = await getAccountList(FullTransactionList);
-            break
-        case 'clear':
-            FullTransactionList.splice(0, FullTransactionList.length);
-            AccountList.splice(0, AccountList.length)
-            break
-        case 'list all':
-            listAll(AccountList);
-            break
-        case 'list':
-            listAccount(AccountList);
-            break
-        case 'export':
-            exportAccountList(AccountList);
-            break
-        default:
-            console.log('That is not a valid instruction, please try again.   ')
-            break
+    case 'import':
+        TransactionList = await importer.getUnparsedTransactionList();
+        FullTransactionList = FullTransactionList.concat(TransactionList);
+        AccountList = await getAccountList(FullTransactionList);
+        break;
+    case 'clear':
+        FullTransactionList.splice(0, FullTransactionList.length);
+        AccountList.splice(0, AccountList.length);
+        break;
+    case 'list all':
+        listAll(AccountList);
+        break;
+    case 'list':
+        listAccount(AccountList);
+        break;
+    case 'export':
+        exportAccountList(AccountList);
+        break;
+    default:
+        console.log('That is not a valid instruction, please try again.   ');
+        break;
     }
     logger.trace('=======END=======');
-    console.log('\n\n\n\n')
-    doTheJob()
+    console.log('\n\n\n\n');
+    doTheJob();
 }
 
-let AccountList = []
-let FullTransactionList = []
-doTheJob()
+let AccountList = [];
+let FullTransactionList = [];
+doTheJob();

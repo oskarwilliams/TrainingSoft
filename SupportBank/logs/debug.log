@@ -5173,3 +5173,12 @@
 [2019-07-17T17:06:02.817] [TRACE] file - =======START=======
 [2019-07-17T17:06:08.684] [TRACE] file - =======END=======
 [2019-07-17T17:06:08.686] [TRACE] file - =======START=======
+[2019-07-17T17:28:05.713] [TRACE] file - =======START=======
+[2019-07-17T17:28:21.006] [TRACE] file - Inputs: 
+[2019-07-17T17:28:21.007] [TRACE] file - Promise { <pending> }
+[2019-07-17T17:28:21.027] [ERROR] file - One Cheeseburger        Should be a number, transaction was on Sun Mar 01 2015 00:00:00 GMT+0000
+[2019-07-17T17:28:21.028] [ERROR] file - 27 this line was in error so was ignored
+[2019-07-17T17:28:21.033] [ERROR] file - Invalid date        Should be a date, transaction was on Invalid date
+[2019-07-17T17:28:21.035] [ERROR] file - 51 this line was in error so was ignored
+[2019-07-17T17:28:21.036] [TRACE] file - =======END=======
+[2019-07-17T17:28:21.038] [TRACE] file - =======START=======

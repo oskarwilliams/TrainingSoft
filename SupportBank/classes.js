@@ -14,19 +14,19 @@ class Person {
 
 class Transaction{
     constructor(Date, FromAccount, ToAccount, Narrative, Amount) {
-    this.Date = Date;
-    this.FromAccount = FromAccount;
-    this.ToAccount = ToAccount;
-    this.Narrative = Narrative;
-    this.Amount = Amount;
+        this.Date = Date;
+        this.FromAccount = FromAccount;
+        this.ToAccount = ToAccount;
+        this.Narrative = Narrative;
+        this.Amount = Amount;
     }
 }
 
 class File{
     constructor(Name,Data,DateFormat) {
-    this.Name = Name;
-    this.Data = Data;
-    this.DateFormat = DateFormat;
+        this.Name = Name;
+        this.Data = Data;
+        this.DateFormat = DateFormat;
     }
 }
 
