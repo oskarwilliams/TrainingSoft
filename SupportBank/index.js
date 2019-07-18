@@ -1,10 +1,10 @@
 const classes = require('./classes');
 const Person = classes.Person;
-const File = classes.File;
 const log4js = require('log4js');
-const fs = require('fs');
+// const fs = require('fs');
 const readlineSync = require('readline-sync');
 const importer = require('./importer');
+const exporter = require('./exporter');
 
 const desiredDateFormat = 'DD/MM/YYYY';
 
@@ -121,25 +121,6 @@ function listAccount(AccountList) {
     }
 }
 
-function getExportFileSetup(AccountList) {
-    const ExportFileSetup = new File;
-    ExportFileSetup.Name = readlineSync.question('What is the desired filename?    ');
-    ExportFileSetup.Name.replace(/\s/g, "");
-    ExportFileSetup.Data = AccountList; 
-    ExportFileSetup.DateFormat = readlineSync.question('What is the desired Date format? (Will default to "DD/MM/YYYY" if empty)    ');
-    if (ExportFileSetup.DateFormat === ''){
-        ExportFileSetup.DateFormat = 'DD/MMM/YYYY';
-    }
-    return ExportFileSetup;
-}
-
-function exportAccountList(AccountList) {
-    const ExportFileSetup = getExportFileSetup(AccountList);
-    const jsonExport = JSON.stringify(ExportFileSetup.Data);
-    fs.writeFileSync('Outputs/' + ExportFileSetup.Name + '.json', jsonExport);
-}
-
-
 async function doTheJob() {
     logger.trace('=======START=======');
     console.log('======WELCOME=======\nWhat function would you like to perform?\nIMPORT a new file\nCLEAR all stored data\nLIST ALL account balances\nLIST the transactions for an account\nEXPORT the transcations to a file');
@@ -162,7 +143,7 @@ async function doTheJob() {
         listAccount(AccountList);
         break;
     case 'export':
-        exportAccountList(AccountList);
+        exporter.exportAccountList(AccountList);
         break;
     default:
         console.log('That is not a valid instruction, please try again.   ');
