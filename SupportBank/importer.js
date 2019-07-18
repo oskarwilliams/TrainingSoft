@@ -96,7 +96,8 @@ async function getUnparsedTransactionList() {
             console.log('This can only accept .csv, .json, and .xml, please try one of these filetypes.   ');
             return getUnparsedTransactionList();
         }
-    } catch {
+    } 
+    catch {
         console.log('That is an incorrect file ending or name, please try again.  ');
         return getUnparsedTransactionList();
     }
