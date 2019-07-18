@@ -20,6 +20,7 @@
         "linebreak-style":["error","windows"],
         "no-plusplus":["error", { "allowForLoopAfterthoughts": true }],
         "no-console":["off"],
-        "eqeqeq":["error"]
+        "eqeqeq":["error"],
+        "prefer-const":["error"]
     }
 }
