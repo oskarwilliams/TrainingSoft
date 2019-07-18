@@ -1,6 +1,6 @@
 const fs = require('fs');
 const readlineSync = require('readline-sync');
-const moment = require('moment')
+const moment = require('moment');
 
 const classes = require('./classes');
 const File = classes.File;
@@ -12,10 +12,10 @@ function getExportFileSetup(AccountList) {
     ExportFileSetup.Data = AccountList; 
     ExportFileSetup.DateFormat = readlineSync.question('What is the desired Date format? (Will default to moment format if empty)    ');
     ExportFileSetup.Data = ExportFileSetup.Data.map(Account => {
-        Account.Date = Account.Date.map(date => moment(date).format(ExportFileSetup.DateFormat))
+        Account.Date = Account.Date.map(date => moment(date).format(ExportFileSetup.DateFormat));
         return Account;
     }
-    )
+    );
     return ExportFileSetup;
 }
 

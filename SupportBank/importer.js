@@ -10,8 +10,6 @@ const Transaction = classes.Transaction;
 
 const logger = log4js.getLogger('file');
 
-const UnparsedTransactionList = classes.UnparsedTransactionList;
-
 async function defaultFromXML(string) {
     const jsonXMLString = await parseXML.xml2json(string, { compact: true, spaces: 4 });
     const unhelpfulResults = (await JSON.parse(jsonXMLString)).TransactionList.SupportTransaction;
