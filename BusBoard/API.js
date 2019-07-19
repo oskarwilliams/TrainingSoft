@@ -1,15 +1,22 @@
 const request = require('request-promise-native');
+const readlineSync = require('readline-sync');
 
-const classes = require('./classes');
+const classes = require('./Transport');
 const Bus = classes.Bus;
 const Stop = classes.Stop;
 
 
 class PostCodeAPI {
-    async getLatLon(postCode) {
+    async getLatLon() {
+        const postCode = readlineSync.question('What is the postcode?    ');
+        try{
         const endpoint = 'postcodes/' + postCode;
         const data = await this.makeRequest(endpoint);
         return [data.result.latitude, data.result.longitude];
+        } catch {
+            console.log('That is not a valid postcode, please try again.  ')
+            return this.getLatLon()
+        }
     }
     makeRequest(endpoint) {
         const options = {
@@ -40,7 +47,7 @@ class TflAPI {
     }
 
     async getStopList(latLon) {
-        const radius = 400;
+        const radius = 500;
         const endpoint = 'StopPoint';
         const queries = {
             'radius': radius,

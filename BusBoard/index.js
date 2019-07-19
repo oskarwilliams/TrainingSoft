@@ -18,8 +18,7 @@ function compare(a, b) {
 
 async function getStopList() {
     const postCodeAPI = new PostCodeAPI;
-    const postCode = readlineSync.question('What is the postcode?    ');
-    const latLon = await postCodeAPI.getLatLon(postCode);
+    const latLon = await postCodeAPI.getLatLon();
     return await tflAPI.getStopList(latLon);
 }
 
@@ -32,14 +31,25 @@ async function getSortedBusLists(stopList) {
     return busLists;
 }
 
-async function doTheThing() {
-    const stopList = await getStopList();
-    const busLists = await getSortedBusLists(stopList);
-    console.log('\n\n');
-    console.log(stopList[0].name + '\n');
-    console.table(busLists[0], ['line', 'timeToStationMins', 'destination']);
-    console.log('\n' + stopList[1].name + '\n');
-    console.table(busLists[1], ['line', 'timeToStationMins', 'destination']);
+function printBusLists(busLists, stopList) {
+    const numberOfStops = readlineSync.question('How many bus stops do you want to view?     ');
+    for (let i = 0; i<numberOfStops; i++){
+        try {
+            console.log('\n\n');
+            console.log(stopList[i].name + '\n');
+            console.table(busLists[i], ['line', 'timeToStationMins', 'destination']);
+        } catch {
+            console.log(`There are only ${i+1} stops within 500 metres of this postcode`)
+            break;
+        }
+    }
 }
 
-doTheThing();
+async function go() {
+    const stopList = await getStopList();
+    const busLists = await getSortedBusLists(stopList);
+    printBusLists(busLists, stopList);
+    console.log('\n\n');
+}
+
+go();
