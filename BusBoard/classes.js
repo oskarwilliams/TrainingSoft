@@ -1,5 +1,3 @@
-const request = require('request-promise');
-
 class Bus {
     constructor(id, line, timeToStation, destination) {
         this.id = id;
@@ -8,9 +6,8 @@ class Bus {
         this.destination = destination;
         this.timeToStationMins = this.getTimeToStationMins();
     }
-
     getTimeToStationMins() {
-        let minutes = Math.floor(this.timeToStation / 60);
+        const minutes = Math.floor(this.timeToStation / 60);
         let seconds = this.timeToStation - minutes * 60;
         if (seconds < 10) { seconds = '0' + seconds; }
         return (minutes + ':' + seconds);
@@ -26,19 +23,5 @@ class Stop {
     }
 }
 
-class Website {
-    constructor(url) {
-        this.url = url;
-    }
-
-    async getData() {
-        let Data = await request(this.url, function (error, response, body) {
-            return body;
-        });
-        return await JSON.parse(Data);
-    }
-}
-
 exports.Bus = Bus;
 exports.Stop = Stop;
-exports.Website = Website;
