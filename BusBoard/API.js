@@ -1,22 +1,13 @@
 const request = require('request-promise-native');
-const readlineSync = require('readline-sync');
-
 const classes = require('./Transport');
 const Bus = classes.Bus;
 const Stop = classes.Stop;
 
-
 class PostCodeAPI {
-    async getLatLon() {
-        const postCode = readlineSync.question('What is the postcode?    ');
-        try{
+    async getLatLon(postCode) {
         const endpoint = 'postcodes/' + postCode;
         const data = await this.makeRequest(endpoint);
-        return [data.result.latitude, data.result.longitude];
-        } catch {
-            console.log('That is not a valid postcode, please try again.  ')
-            return this.getLatLon()
-        }
+        return [data.result.latitude, data.result.longitude]; 
     }
     makeRequest(endpoint) {
         const options = {
