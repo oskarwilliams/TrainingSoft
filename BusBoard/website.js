@@ -9,7 +9,7 @@ async function getResponse(params) {
     const stopList = await processing.getStopList(postCode);
     const busLists = await processing.getSortedBusLists(stopList);
     const response = [];
-    for (let i = 0; i<2; i++){
+    for (let i = 0; i<stopList.length; i++){
         response.push([stopList[i].name, busLists[i]]);
     }
     return response;
@@ -19,6 +19,7 @@ async function getResponse(params) {
 async function runWebsite() {
     app.listen(port, () => console.log(`Example app listening on port ${port}!`));
     app.use(express.static('frontend'));
+    app.use('/history', express.static('frontend/history.html'));
     app.get('/departureBoards', async function (req, res) {
         const response = await getResponse(req.query);
         res.send(response);

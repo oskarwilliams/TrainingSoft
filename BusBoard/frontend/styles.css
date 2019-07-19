@@ -1,0 +1,50 @@
+h1 {
+    color:rgb(255, 0, 0);
+    font-size: 100px
+}
+h2 {
+    color:rgb(255, 255, 255);
+    font-size: 40px;
+}
+
+
+body {
+    background-color:rgb(0, 0, 0);
+}
+
+form {
+    color: white
+
+}
+#postcode {
+    color:white;
+    background-color: rgb(0, 0, 0);
+}
+
+#button {
+    color:white;
+    background-color: rgb(0, 0, 0);
+}
+
+.snow{
+    background-image:
+            url(https://i.imgur.com/uYjnk8N.png), 
+               url(https://i.imgur.com/iAGD6MA.png), 
+               url(https://i.imgur.com/hIJDjbg.png);
+    animation: snow 30s linear infinite;
+    }
+    
+    @keyframes snow {
+        0% {background-position: 0px 0px, 0px 0px, 0px 0px;}
+        100% {background-position: 500px 1000px, 400px 400px, 300px 300px}
+    }
+
+div {
+    color:white
+}
+
+A {
+    color:white
+}
+
+ /* 4 */
