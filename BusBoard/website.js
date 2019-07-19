@@ -5,7 +5,7 @@ const port = 3000;
 // app.static('public');
 
 async function getResponse(params) {
-    const postCode = params.departureBoards;
+    const postCode = params.postcode;
     const stopList = await processing.getStopList(postCode);
     const busLists = await processing.getSortedBusLists(stopList);
     const response = [];
@@ -17,10 +17,10 @@ async function getResponse(params) {
 }
 
 async function runWebsite() {
-    console.log('Hi');
     app.listen(port, () => console.log(`Example app listening on port ${port}!`));
-    app.get('/departureBoards/:departureBoards', async function (req, res) {
-        const response = await getResponse(req.params);
+    app.use(express.static('frontend'));
+    app.get('/departureBoards', async function (req, res) {
+        const response = await getResponse(req.query);
         res.send(response);
     });
     
