@@ -1,6 +1,6 @@
 var xhttp = new XMLHttpRequest();
 
-function buttonSubmit() {
+function buttonSubmit() { // eslint-disable-line no-unused-vars
 
     var postCode = document.getElementById('postcode').value;
 
